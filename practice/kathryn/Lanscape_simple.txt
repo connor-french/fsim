@@ -1,0 +1,45 @@
+initialize() {
+defineConstant("N", 1000);
+initializeSLiMOptions(dimensionality="xyz");
+initializeMutationRate(1e-7);
+initializeMutationType("m1", 0.5, "f", 0.0); // neutral
+initializeGenomicElementType("g1", m1, 1);
+initializeGenomicElement(g1, 0, 1e5 - 1);
+initializeRecombinationRate(1e-8);
+// spatial mate choice
+initializeInteractionType(2, "xy", reciprocal=T, maxDistance=0.1);
+}
+1 late() {
+sim.addSubpop("p1", N);
+p1.setSpatialBounds(c(0.0, 0.0, 0.0, 1.0, 1.0, 1.0));
+defineConstant("mapValues", runif(64, 0, 1));
+p1.defineSpatialMap("map1", "xy", c(8, 8), mapValues, interpolate=T,
+valueRange=c(0.0, 1.0), colors=c("black", "white"));
+for (ind in p1.individuals)
+ind.setSpatialPosition(p1.pointUniform());
+p1.individuals.z = 0.0;
+}
+modifyChild() {
+// set offspring position based on parental position
+do
+pos = c(parent1.spatialPosition[0:1] + rnorm(2, 0, 0.005), 0.0);
+while (!p1.pointInBounds(pos));
+child.setSpatialPosition(pos);
+return T;
+}
+1: late() {
+// evaluate interactions
+i2.evaluate();
+}
+
+1: mateChoice() {
+// nearest-neighbor mate choice
+neighbors = i2.nearestNeighbors(individual, 6);
+mates = rep(0.0, p1.individualCount);
+mates[neighbors.index] = 1.0;
+return mates;
+}
+
+1000 late() {
+sim.simulationFinished();
+}
