@@ -1,0 +1,86 @@
+initialize() {
+initializeSLiMModelType("nonWF");
+defineConstant("m", 0.01); // migration rate
+defineConstant("e", 0); // subpopulation extinction rate
+initializeMutationType("m1", 0.5, "f", 0.0);
+m1.convertToSubstitution = T;
+initializeGenomicElementType("g1", m1, 1.0);
+initializeGenomicElement(g1, 0, 99999);
+initializeMutationRate(1e-7);
+initializeRecombinationRate(1e-8);
+}
+reproduction() {
+subpop.addCrossed(individual, subpop.sampleIndividuals(1));
+}
+
+1 early() {
+// Read in number of populations
+lines = readFile("~/Desktop/Slime/K.txt");
+N = length(lines);
+// Populate the first population
+for (i in 1:N)
+sim.addSubpop(i, (i == 1) ? 10 else 0);
+}
+
+early() {
+
+// Read in pops and resist
+pops = readFile("~/Desktop/Slime/pops.txt");
+resist = readFile("~/Desktop/Slime/resist.txt");
+
+
+// random migration
+nIndividuals = sum(sim.subpopulations.individualCount);
+nMigrants = asInteger(nIndividuals * m);
+migrants = sample(sim.subpopulations.individuals, nMigrants);
+for (migrant in migrants)
+{
+
+dest = migrant.subpopulation;
+dest.id;
+// Somehow get pops to migration only with neighbors
+
+for(line in pops){
+fields = strsplit(line, " ");
+if(dest.id==asInteger(fields[0]))
+tempAvail=fields[1:4];
+}
+
+avail=NULL;
+for(element in tempAvail){
+  if(element != "NA")
+  avail=c(avail,asInteger(element));
+}
+  
+dest = sim.subpopulations[sample(avail,1)-1];
+//do dest = sample(sim.subpopulations, 1);
+//while (dest == migrant.subpopulation);
+dest.takeMigrants(migrant);
+}
+
+// density-dependence and random extinctions
+lines = readFile("~/Desktop/Slime/K.txt");
+K=NULL;
+for(line in lines){
+  componants = strsplit(line,",");
+  K = c(K, asInteger(componants[0]));
+  }
+  
+np=0;  
+for (subpop in sim.subpopulations)
+{
+if (runif(1) < e)
+subpop.fitnessScaling = 0.0;
+else
+subpop.fitnessScaling = K[np] / subpop.individualCount;
+np=np+1;
+}
+
+}
+late() {
+if (sum(sim.subpopulations.individualCount) == 0)
+stop("Global extinction in generation " + sim.generation + ".");
+}
+2000 late() {
+sim.outputFixedMutations();
+}
