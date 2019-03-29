@@ -1,7 +1,7 @@
 initialize() {
 initializeSLiMModelType("nonWF");
-defineConstant("m", 0.01); // migration rate
-defineConstant("e", 0); // subpopulation extinction rate
+defineConstant("m", 0.001); // migration rate
+defineConstant("e", 0.0); // subpopulation extinction rate
 initializeMutationType("m1", 0.5, "f", 0.0);
 m1.convertToSubstitution = T;
 initializeGenomicElementType("g1", m1, 1.0);
@@ -33,12 +33,12 @@ resist = readFile("~/Desktop/Slime/resist.txt");
 nIndividuals = sum(sim.subpopulations.individualCount);
 nMigrants = asInteger(nIndividuals * m);
 migrants = sample(sim.subpopulations.individuals, nMigrants);
+
+// Somehow get pops to migration only with neighbors
 for (migrant in migrants)
 {
-
 dest = migrant.subpopulation;
 dest.id;
-// Somehow get pops to migration only with neighbors
 
 for(line in pops){
 fields = strsplit(line, " ");
@@ -51,8 +51,22 @@ for(element in tempAvail){
   if(element != "NA")
   avail=c(avail,asInteger(element));
 }
-  
-dest = sim.subpopulations[sample(avail,1)-1];
+
+for(line in resist){
+fields = strsplit(line, " ");
+if(dest.id==asInteger(fields[0]))
+tempMig=fields[1:4];
+}
+
+mig=NULL;
+for(element in tempMig){
+  if(element != "NA")
+  mig=c(mig,asFloat(element));
+}
+
+pop = sample(avail,1,weights=mig)-1;
+//pop = sample(avail,1)-1;
+dest = sim.subpopulations[pop];
 //do dest = sample(sim.subpopulations, 1);
 //while (dest == migrant.subpopulation);
 dest.takeMigrants(migrant);
@@ -81,6 +95,8 @@ late() {
 if (sum(sim.subpopulations.individualCount) == 0)
 stop("Global extinction in generation " + sim.generation + ".");
 }
-2000 late() {
-sim.outputFixedMutations();
+200000 late() {
+allIndividuals = sim.subpopulations.individuals;
+sampledIndividuals = sample(allIndividuals, 100);
+sampledIndividuals.genomes.outputVCF(filePath = "~/Desktop/slime/slim_practice.vcf");
 }
