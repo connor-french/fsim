@@ -39,35 +39,40 @@ early() {
   nMigrants = asInteger(nIndividuals * m);
   migrants = sample(sim.subpopulations.individuals, nMigrants);
 
-  // Somehow get pops to migration only with neighbors
+  // Get pops to migration only with neighbors
   for (migrant in migrants) {
     dest = migrant.subpopulation;
     dest.id;
 
+  //determine subpopulations the focal population can migrate into (part 1- get pop fields)
   for(line in pops){
     fields = strsplit(line, " ");
       if(dest.id==asInteger(fields[0]))
         tempAvail=fields[1:4];
   }
-
+  
+  //part 2- make a vector of available populations to move to
   avail=NULL;
   for(element in tempAvail){
     if(element != "NA")
       avail=c(avail,asInteger(element));
   }
-
+  
+  //determine resistance to movement from restistance file (part 1- get resistance fields)
   for(line in resist){
     fields = strsplit(line, " ");
     if(dest.id==asInteger(fields[0]))
       tempMig=fields[1:4];
   }
 
+  //part 2- make a vector of resistance values
   mig=NULL;
   for(element in tempMig){
     if(element != "NA")
       mig=c(mig,asFloat(element));
   }
 
+  //determine which population the migrant will move to based on the resistance value
   pop = sample(avail,1,weights=mig)-1;
   //pop = sample(avail,1)-1;
   dest = sim.subpopulations[pop];
