@@ -1,51 +1,73 @@
-library(raster)
-# Make a fake matrix with suitability between 0 and 1
-val <- round(runif(12),digits=4)
-temp <- matrix(val,3,4)
-suit <- raster(temp)
-plot(suit)
-suit
+##############################################################
+###        Simulate and/or transform                       ###
+###             niche models for use                       ###
+###                          in SLiM                       ###
+###                                                        ###
+### Author: KPM Updated: 2 April 2019                      ###
+##############################################################
 
-# Transform suitability into carrying capacity
+### Simple simulated niche model projected on geographic space
+library(raster)
+# Generate values between 0 and 1 (suitability)
+val <- round(runif(12),digits=4)
+# Form a matrix with the simulated suitability values
+temp <- matrix(val,3,4)
+# Turn the matrix into a raster
+# This would be your output from niche modeling procedure
+suit <- raster(temp)
+# Plot the model
+plot(suit)
+
+### Transform suitability into carrying capacity
+## Use simulated or empirical niche model for input
+# Get the suitability values from the niche model as vector
 suit_val <- getValues(suit)
+# Simple linear relationship between suitability 
+# and carry capacity
 K <- round(suit_val*1000)
 K
 
-# Transform suitability into resistance (-ish thing)
-m.suit <- as.matrix(suit)
-# Make this weird matrix
-n<-1
-pop <- matrix(NA,nrow(m.suit),ncol(m.suit))
-for(i in 1:nrow(m.suit)){
-  for(j in 1:ncol(m.suit)){
-    pop[i,j] <- n
-    n=n+1
-  }
-}
+### Transform suitability into resistance (-ish thing)
+## Create matrix with population names in SLiM
+# Number of cells in raster
+n.cell <- nrow(suit)*ncol(suit)
+# Vector of population names
+temp <- c(1:n.cell)
+# Spatial organization of populations
+pop <- t(matrix(temp,ncol(suit),nrow(suit)))
 pop
-
-# Make a weird migration matrix
-resist <- matrix(NA,nrow(m.suit)*ncol(m.suit),5)
-pops <- matrix(NA,nrow(m.suit)*ncol(m.suit),5)
+## Make two matrices for SLiM
+## First is where each population can migraate to (pops)
+## Second is the probability of migration for each place
+## that is available for migration (resist)
+# Initialize matrices of correct size with NAs
+resist <- matrix(NA,nrow(suit)*ncol(suit),5)
+pops <- matrix(NA,nrow(suit)*ncol(suit),5)
 n<-1
-for(i in 1:nrow(m.suit)){
-  for(j in 1:ncol(m.suit)){
+# Don't judge me for being an old lady and using for loops
+for(i in 1:nrow(suit)){
+  for(j in 1:ncol(suit)){
+    # First column of our new matrices is origin population
     resist[n,1] <- n
     pops[n,1] <- n
-    if(i+1 <= nrow(m.suit)){
-      resist[n,2] <- m.suit[i+1,j]
+    # Migration from origin to the south
+    if(i+1 <= nrow(suit)){
+      resist[n,2] <- suit[i+1,j]
       pops[n,2] <- pop[i+1,j]
     }
+    # Migration from origin to the north
     if(i-1 != 0){
-      resist[n,3] <- m.suit[i-1,j]
+      resist[n,3] <- suit[i-1,j]
       pops[n,3] <- pop[i-1,j]
     }
-    if(j+1 <= nrow(m.suit)){
-      resist[n,4] <- m.suit[i,j+1]
+    # Migration from origin to the east
+    if(j+1 <= nrow(suit)){
+      resist[n,4] <- suit[i,j+1]
       pops[n,4] <- pop[i,j+1]
     }
+    # Migration from origin to the west
     if(j-1 != 0){
-      resist[n,5] <- m.suit[i,j-1]
+      resist[n,5] <- suit[i,j-1]
       pops[n,5] <- pop[i,j-1]
     }
     n<-n+1
@@ -54,11 +76,20 @@ for(i in 1:nrow(m.suit)){
 resist
 pops
 
-write.table(K,"~/Desktop/Slime/K.txt", row.names=FALSE, col.names=FALSE)
-write.table(resist,"~/Desktop/Slime/resist.txt", row.names=FALSE, col.names=FALSE, quote=FALSE)
-write.table(pops,"~/Desktop/Slime/pops.txt", row.names=FALSE, col.names=FALSE, quote=FALSE)
+### Write the transformed data to files
+write.table(K,"~/Desktop/Slime/K.txt", 
+            row.names=FALSE, col.names=FALSE)
+write.table(resist,"~/Desktop/Slime/resist.txt", 
+            row.names=FALSE, col.names=FALSE, quote=FALSE)
+write.table(pops,"~/Desktop/Slime/pops.txt", 
+            row.names=FALSE, col.names=FALSE, quote=FALSE)
 
 
+
+#############################################################
+### Read exported VCF of SNPs from SLiM and
+### run PCA to examine population structure
+#Sorry this section isn't commented, deal with it
 library(vcfR)
 library(adegenet)
 library(ggplot2)
@@ -70,10 +101,14 @@ GL <- vcfR2genlight(VCF)
 pca <- glPca(GL)
 dat <- as.data.frame(pca$scores)
 
-
 ggplot(dat, aes(x=dat[,1], y=dat[,2])) + 
-  geom_point(alpha=0.5, size=4) + xlab("PC1") + ylab("PC2") +
+  geom_point(alpha=0.5, size=4) + 
+  xlab("PC1") + ylab("PC2") +
   #scale_color_manual(name="Site", values=c("darkred","darkorange1")) +
-  theme_minimal() + scale_x_continuous(breaks=seq(-20,30,10)) +
-  theme(axis.text = element_text(size=14), axis.title = element_text(size=18),
-        panel.grid.minor = element_blank(), legend.position = "none")
+  theme_minimal() + 
+  scale_x_continuous(breaks=seq(-20,30,10)) +
+  theme(axis.text = element_text(size=14), 
+        axis.title = element_text(size=18),
+        panel.grid.minor = element_blank(), 
+        legend.position = "none")
+
