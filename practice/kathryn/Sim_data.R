@@ -77,11 +77,11 @@ resist
 pops
 
 ### Write the transformed data to files
-write.table(K,"~/Desktop/Slime/K.txt", 
+write.table(K,"~/Desktop/test_files/K.txt", 
             row.names=FALSE, col.names=FALSE)
-write.table(resist,"~/Desktop/Slime/resist.txt", 
+write.table(resist,"~/Desktop/test_files/resist.txt", 
             row.names=FALSE, col.names=FALSE, quote=FALSE)
-write.table(pops,"~/Desktop/Slime/pops.txt", 
+write.table(pops,"~/Desktop/test_files/pops.txt", 
             row.names=FALSE, col.names=FALSE, quote=FALSE)
 
 
@@ -94,7 +94,7 @@ library(vcfR)
 library(adegenet)
 library(ggplot2)
 
-VCF <- read.vcfR("~/Desktop/Slime/slim_practice.vcf")
+VCF <- read.vcfR("~/Desktop/test_files/slim_practice.vcf")
 GL <- vcfR2genlight(VCF)
 
 
