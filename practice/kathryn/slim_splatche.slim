@@ -3,7 +3,7 @@
 
 initialize() {
   initializeSLiMModelType("nonWF"); //initialize a non-Wright Fisher model
-  defineConstant("m", 0.001); // migration rate
+  defineConstant("m", 0.01); // migration rate
   defineConstant("e", 0.0); // subpopulation extinction rate
   
   initializeMutationType("m1", 0.5, "f", 0.0); //initialize neutral mutations
