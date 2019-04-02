@@ -61,7 +61,7 @@ for(i in 1:nrow(suit)){
       pops[n,3] <- pop[i-1,j]
     }
     # Migration from origin to the east
-    if(j+1 <= nrow(suit)){
+    if(j+1 <= ncol(suit)){
       resist[n,4] <- suit[i,j+1]
       pops[n,4] <- pop[i,j+1]
     }
