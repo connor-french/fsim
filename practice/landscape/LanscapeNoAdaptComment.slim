@@ -1,0 +1,94 @@
+initialize() {
+// Population size
+defineConstant("N", 500);
+
+// Set 2 dimentions landscape
+initializeSLiMOptions(dimensionality="xy");
+
+// Genome things
+initializeMutationRate(1e-6);
+initializeMutationType("m1", 0.5, "f", 0.0); // neutral
+initializeGenomicElementType("g1", m1, 1);
+initializeGenomicElement(g1, 0, 1e5 - 1);
+initializeRecombinationRate(1e-8);
+
+// spatial mate choice
+defineConstant("sigma_M", 0.1);
+initializeInteractionType(2, "xy", reciprocal=T,
+maxDistance=sigma_M * 3);
+i2.setInteractionFunction("n", 1.0, sigma_M);
+
+// You are something about the fitness 
+// When this number is higher there will be more ind in non-red?
+defineConstant("sigma_K", 0.1);
+
+// spatial competition
+// This should somehow be a function of the landscape value
+defineConstant("sigma_C", 0.1);
+initializeInteractionType(1, "xy", reciprocal=T,
+maxDistance=sigma_C * 3); 
+// sets interaction something to normal dist with max(?) of 1 and sd of sigma_C 
+// So maximum distance is three times the interaction kernal
+// Ignore interactions past the maximum distance
+i1.setInteractionFunction("n", 1, sigma_C);
+}
+
+1 late() {
+// Initialize one population with size N
+sim.addSubpop("p1", N);
+// Size of the landscape (Xmin,Ymin,Xmax,Ymax)
+// Will run without this command, because [0,1] is default
+p1.setSpatialBounds(c(0.0, 0.0, 1.0, 1.0));
+
+// Simulating landscape
+// Generate 25 random numbers between 0 and 1
+defineConstant("mapValues", runif(25, 0, 1));
+// Define the landscape using the 25 values in 5x5 grid, interpolated
+p1.defineSpatialMap("map1", "xy", c(5, 5), mapValues, interpolate=T,
+valueRange=c(0.0, 1.0), colors=c("yellow", "red"));
+
+// start near a specific map location (right now, center)
+for (ind in p1.individuals) {
+ind.x = rnorm(1, 0.5, 0.01);
+ind.y = rnorm(1, 0.5, 0.01);
+}
+}
+
+
+modifyChild() {
+// Getting stuck on corners/edges 
+// set offspring position based on parental position
+do
+// Get position of parent 1
+// Get two numbers from normal distribution with mean = 0 and sd = 0.005
+// Add those babies together to get position of offspring 
+pos = c(parent1.spatialPosition + rnorm(2, 0, 0.005));
+// Make sure offspring position is in bounds
+while (!p1.pointInBounds(pos));
+child.setSpatialPosition(pos);
+return T;
+}
+
+
+1: late() {
+// evaluate interactions
+i1.evaluate();
+i2.evaluate();
+}
+
+// reward proximity to the optimum
+fitness(NULL) { 
+location = individual.spatialPosition;
+suitability = subpop.spatialMapValue("map1", location);
+return dnorm(suitability, mean=0.0, sd=sigma_K);
+}
+
+mateChoice() {
+// spatial mate choice
+return i2.strength(individual);
+}
+
+
+10000 late() {
+sim.simulationFinished();
+}

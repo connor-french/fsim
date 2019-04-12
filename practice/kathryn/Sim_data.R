@@ -9,14 +9,17 @@
 ### Simple simulated niche model projected on geographic space
 library(raster)
 # Generate values between 0 and 1 (suitability)
-val <- round(runif(12),digits=4)
+val <- round(runif(300),digits=4)
 # Form a matrix with the simulated suitability values
-temp <- matrix(val,3,4)
+temp <- matrix(val,15,20)
 # Turn the matrix into a raster
 # This would be your output from niche modeling procedure
 suit <- raster(temp)
 # Plot the model
 plot(suit)
+suit <- raster("~/Downloads/Nfpictiventris_pred_scaled.tif")
+suit <- raster("~/Downloads/Nfpictiventris_pred.tif")
+suit[is.na(suit)] <- 0.01
 
 ### Transform suitability into carrying capacity
 ## Use simulated or empirical niche model for input
@@ -24,7 +27,7 @@ plot(suit)
 suit_val <- getValues(suit)
 # Simple linear relationship between suitability 
 # and carry capacity
-K <- round(suit_val*1000)
+K <- round(suit_val*100)
 K
 
 ### Transform suitability into resistance (-ish thing)
