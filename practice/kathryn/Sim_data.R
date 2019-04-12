@@ -80,6 +80,7 @@ resist
 pops
 
 ### Write the transformed data to files
+#this is hardcoded right now, change the directory as appropriate
 write.table(K,"~/Desktop/test_files/K.txt", 
             row.names=FALSE, col.names=FALSE)
 write.table(resist,"~/Desktop/test_files/resist.txt", 
