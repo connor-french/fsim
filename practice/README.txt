@@ -8,5 +8,5 @@ $: slim slim_splatche.slim
 For more run options:
 $: slim
 
-
+If you want to generate your own files, we've included a Sim_data.R file.
 

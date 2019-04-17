@@ -5,7 +5,7 @@ library(adegenet) #load in adegenet package for find.clusters and DAPC
 
 
 #read in the vcf file
-vcf <- read.vcfR('/Users/connorfrench/Desktop/connor_practice_nosplit.vcf')
+vcf <- read.vcfR('/Users/connorfrench/Desktop/test_files/slim_practice_noweights.vcf')
 #convert vcf to genlight obj
 gen <- vcfR2genlight(vcf)
 
